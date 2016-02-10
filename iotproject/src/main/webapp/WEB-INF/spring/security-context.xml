@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>	
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+    xmlns:beans="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans 
+    	http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+        http://www.springframework.org/schema/security 
+        http://www.springframework.org/schema/security/spring-security-4.0.xsd
+        http://www.springframework.org/schema/context
+		http://www.springframework.org/schema/context/spring-context-3.2.xsd
+		http://www.springframework.org/schema/tx
+		http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+		http://www.springframework.org/schema/context 
+		http://www.springframework.org/schema/context/spring-context.xsd">
+
+	<context:component-scan base-package="com.iot" />
+	
+ 	<debug/>
+
+    <http pattern="/login" security="none"/>
+    <http pattern="/signup" security="none"/>
+    <http pattern="/activate" security="none"/>
+    <http pattern="/testpage" security="none"/>
+    <http pattern="/fonts/**" security="none"/>
+    <!-- <http pattern="/home" security="none"/> -->
+    <http pattern="/js/**" security="none"/>
+    <http pattern="/css/**" security="none"/>
+    <http pattern="/img/**" security="none"/>
+    <http pattern="/images_protected/**" security="none"/>
+    <http pattern="/pdf/**" security="none"/>
+  <!--   <http pattern="/public/**" security="none"/> -->
+    
+    
+    <http auto-config="true" use-expressions="true" disable-url-rewriting="true" >
+ 		<intercept-url pattern="/secure/admin/super/**" access="hasRole('ROLE_SUPERADMIN')"/>
+ 		<intercept-url pattern="/secure/admin/**" access="hasAnyRole('ROLE_SUPERADMIN','ROLE_ADMIN')"/>
+ 		<!-- <intercept-url pattern="/secure/**" access="hasAnyRole('ROLE_SUPERADMIN','ROLE_ADMIN','ROLE_AUTHOR','ROLE_MEMBER')"/> -->
+ 		<!-- <intercept-url pattern="/secure/companyadmin/**" access="hasRole('ROLE_COMPANYADMIN')"/>
+		<intercept-url pattern="/secure/operator/**" access="hasAnyRole('ROLE_COMPANYOPERATOR','ROLE_COMPANYADMIN')"/>
+		<intercept-url pattern="/secure/driver/**" access="hasRole('ROLE_DRIVER')"/> -->
+		
+        <intercept-url pattern="/public/**" access="permitAll"/>
+        <intercept-url pattern="/secure/**" access="isAuthenticated()" />
+        <form-login login-page="/login" default-target-url="/public/inspireblog"  authentication-failure-url="/login-failure" always-use-default-target="true" />
+        <logout logout-url="/j_spring_security_logout" logout-success-url="/public/inspireblog" delete-cookies="JSESSIONID"/>
+       <!--  <remember-me />
+        Uncomment to limit the number of sessions a user can have -->
+        <session-management invalid-session-url="/timeout">
+            <concurrency-control max-sessions="1" error-if-maximum-exceeded="false" expired-url="/timeout" session-registry-ref="sessionRegistry"/>
+        </session-management>        
+     
+    </http>    
+    <beans:bean id='bCryptPasswordEncoder' class='org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder'/>
+    
+    <authentication-manager>
+        <authentication-provider>
+		<!-- <password-encoder ref="encoder"/> -->
+		<password-encoder ref="bCryptPasswordEncoder"/>
+		<jdbc-user-service data-source-ref="dataSource"
+		      		   users-by-username-query="select username,password, enabled from users where username=?" 
+ 		   authorities-by-username-query="select u.username, ur.authority from users u, user_roles ur where ur.user_role_id = u.user_role_id and u.username =?"  />	    	
+        </authentication-provider>
+    </authentication-manager>
+ 	<beans:bean id="sessionRegistry" class="org.springframework.security.core.session.SessionRegistryImpl"/>    
+</beans:beans>
